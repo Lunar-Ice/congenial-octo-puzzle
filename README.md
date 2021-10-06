@@ -12,4 +12,5 @@
   - Using g++, run the following commands in the windows terminal to view the results of the algorithm in the windows terminal
 
     g++ main.cc -o "executable_name"; { executable_name: anything }
+    
     ./"executable_name" "algorithm_name" input.txt { algorithm_name: dfs, ids, astar1, astar2 }
