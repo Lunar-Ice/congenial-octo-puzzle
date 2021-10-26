@@ -1,1 +1,1 @@
-web: octopuzzle
+web:go run main.go
