@@ -27,7 +27,7 @@ class RequiredPuzzleData extends Component {
 
     handleSubmit(event) {
 	this.setState({dataLoaded: true});
-	fetch('http://localhost:5000/input/query?inputState=' + this.state.initial.split(" ").join("") + '&goalState=' + this.state.goal.split(" ").join("") + '&algo=' + this.state.algo + '&depth=' + this.state.depth)
+	fetch('https://octopuzzle.herokuapp.com/input/query?inputState=' + this.state.initial.split(" ").join("") + '&goalState=' + this.state.goal.split(" ").join("") + '&algo=' + this.state.algo + '&depth=' + this.state.depth)
 	    .then(response => response.json())
 	    .then(data => this.setState({ puzzleSolution: (JSON.parse(data)).moves }));
 	event.preventDefault();
