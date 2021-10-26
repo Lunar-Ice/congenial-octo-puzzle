@@ -5,8 +5,25 @@
 #include <stack>
 #include <cstring>
 #include <cmath>
+#include <vector>
 
 using namespace std;
+
+string goalS;
+string goalState[3][3];
+int depthLimit;
+
+void arraySetup(string setup) {
+  stringstream ss(setup);
+  string tmp;
+
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      ss >> tmp;
+      goalState[i][j] = tmp;
+    }
+  }
+}
 
 class eight_puzzle {
   private:
@@ -89,36 +106,13 @@ class eight_puzzle {
   }
 
   bool isGoalState() {
-
-    if(arr[1][1] != "*") {
-      return false;
-    }
-    string puzzle_string = "";
-
     for(int i = 0; i < 3; i++) {
       for(int j = 0; j < 3; j++) {
-	puzzle_string += arr[i][j] + " ";
-      }
-    }
-
-    stringstream ss(puzzle_string);
-    string curr, prev;
-
-    ss >> prev;
-
-    if(prev == "*") {
-      return false;
-    }
-    
-    while(ss >> curr) {
-      if(curr != "*") {
-	if(atoi(prev.c_str()) > atoi(curr.c_str())) {
+	if(goalState[i][j] != arr[i][j]) {
 	  return false;
 	}
-	prev = curr;
       }
     }
-    
     return true;
   }
 
@@ -132,7 +126,7 @@ class eight_puzzle {
       }
     }
 
-    string goal_string = "1 2 3 4 * 5 6 7 8";
+    string goal_string = goalS;
 
     stringstream ss(puzzle_string);
     string curr_tile;
@@ -163,15 +157,13 @@ class eight_puzzle {
   
   int manhattanDistance() {
     int manhattanDistance = 0;
-
-    string goal[3][3] = {{"1", "2", "3"}, {"4", "*", "5"}, {"6", "7", "8"}};
     
     int x, y = 0;
 
     for(int i = 0; i < 3; i++) {
       for(int j = 0; j < 3; j++) {
-	if(arr[i][j] != "*" && arr[i][j] != goal[i][j]) {
-	  distanceHelper(goal, arr[i][j], x, y);
+	if(arr[i][j] != "*" && arr[i][j] != goalState[i][j]) {
+	  distanceHelper(goalState, arr[i][j], x, y);
 	  manhattanDistance += (abs((i+1)-x) + abs((j+1)-y));
 	}
       }
@@ -186,6 +178,19 @@ class eight_puzzle {
 	cout << arr[i][j] << " ";
       }
       cout << endl;
+    }
+  }
+
+  void print_string() {
+    for(int i = 0; i < 3; i++) {
+      for(int j = 0; j < 3; j++) {
+	if(i == 2 && j == 2) {
+	  cout << arr[i][j];
+	}
+	else {
+	  cout << arr[i][j] << " ";
+	}
+      }
     }
   }
 };
@@ -315,42 +320,58 @@ bool dfs_helper(Node* root, int depth, stack<eight_puzzle> &dfs_stack, int &stat
 void dfs(Node* root, string input) {
   int moves = 0;
   stack<eight_puzzle> dfs_stack;
-  cout << "Eight-Puzzle: " << input << endl;
+  //cout << "Eight-Puzzle: " << input << endl;
+  cout << "{\"moves\":[";
   int statesEnqueued = 0;
-  if(dfs_helper(root, 10, dfs_stack, statesEnqueued)) {
+  if(dfs_helper(root, depthLimit, dfs_stack, statesEnqueued)) {
     while(!dfs_stack.empty()) {
-      dfs_stack.top().print_puzzle();
-      cout << endl;
+      cout << "\"";
+      dfs_stack.top().print_string();
       dfs_stack.pop();
+      if(!dfs_stack.empty()) {
+	cout << "\", ";
+      }
+      else {
+	cout << "\"";
+      }
       moves++;
     }
-    cout << "Number of moves = " << moves-1 << endl;
-    cout << "Number of states enqueued = " << statesEnqueued << endl;
+    cout << "]}";
+    //cout << "Number of moves = " << moves-1 << endl;
+    //cout << "Number of states enqueued = " << statesEnqueued << endl;
   }
   else {
-    cout << "Impossible to reach goal state at search tree of depth 10" << endl;
+    cout << "\"Impossible to reach goal state at search tree of depth " << depthLimit << "\"]}" << endl;
   }
 }
 
 void ids(Node* root, string input) {
-  cout << "Eight-Puzzle: " << input << endl;
-  for(int i = 1; i <= 10; i++) {
+  //cout << "Eight-Puzzle: " << input << endl;
+  cout << "{\"moves\":[";
+  for(int i = 1; i <= depthLimit; i++) {
     stack<eight_puzzle> ret_stack;
     int moves = 0;
     int statesEnqueued = 0;
     if(dfs_helper(root, i, ret_stack, statesEnqueued)) {
       while(!ret_stack.empty()) {
-	ret_stack.top().print_puzzle();
-	cout << endl;
+	cout << "\"";
+	ret_stack.top().print_string();
 	ret_stack.pop();
+	if(!ret_stack.empty()) {
+	  cout << "\", ";
+	}
+	else {
+	  cout << "\"";
+	}
 	moves++;
       }
-      cout << "Number of moves = " << moves-1 << endl;
-      cout << "Number of states enqueued = " << statesEnqueued << endl;
+      cout << "]}";
+      //cout << "Number of moves = " << moves-1 << endl;
+      //cout << "Number of states enqueued = " << statesEnqueued << endl;
       return;
     }
   }
-  cout << "Impossible to reach goal state at search tree of depth 10" << endl;
+  cout << "\"Impossible to reach goal state at search tree of depth " << depthLimit << "\"]}" << endl;
 }
 
 bool astarOne_helper(Node* root, stack<eight_puzzle> &ret, int &statesEnqueued) {
@@ -443,21 +464,29 @@ bool astarOne_helper(Node* root, stack<eight_puzzle> &ret, int &statesEnqueued) 
 
 void astarOne(Node* root, string input) {
   //misplaced heuristic
-  cout << "Eight-Puzzle: " << input << endl;
+  //cout << "Eight-Puzzle: " << input << endl;
+  cout << "{\"moves\":[";
   int statesEnqueued, moves = 0;
   stack<eight_puzzle> ret;
   if(astarOne_helper(root, ret, statesEnqueued)) {
     while(!ret.empty()) {
-	ret.top().print_puzzle();
-	cout << endl;
-	ret.pop();
-	moves++;
+      cout << "\"";
+      ret.top().print_string();
+      ret.pop();
+      if(!ret.empty()) {
+	cout << "\", ";
       }
-      cout << "Number of moves = " << moves-1 << endl;
-      cout << "Number of states enqueued = " << statesEnqueued << endl;
+      else {
+	cout << "\"";
+      }
+      moves++;
+    }
+    cout << "]}";
+      //cout << "Number of moves = " << moves-1 << endl;
+      //cout << "Number of states enqueued = " << statesEnqueued << endl;
   }
   else {
-    cout << "Impossible to reach goal state at search tree of depth 10" << endl;
+    cout << "\"Impossible to reach goal state at search tree of depth " << depthLimit << "\"]}" << endl;
   }
 }
 
@@ -551,28 +580,34 @@ bool astarTwo_helper(Node* root, stack<eight_puzzle> &ret, int &statesEnqueued) 
 
 void astarTwo(Node* root, string input) {
   //manhattan heuristic
-  cout << "Eight-Puzzle: " << input << endl;
+  //cout << "Eight-Puzzle: " << input << endl;
   int statesEnqueued, moves = 0;
   stack<eight_puzzle> ret;
-
+  cout << "{\"moves\":[";
   if(astarTwo_helper(root, ret, statesEnqueued)) {
     while(!ret.empty()) {
-	ret.top().print_puzzle();
-	cout << endl;
-	ret.pop();
-	moves++;
+      ret.top().print_string();
+      ret.pop();
+      if(!ret.empty()) {
+	cout << "\", ";
       }
-      cout << "Number of moves = " << moves-1 << endl;
-      cout << "Number of states enqueued = " << statesEnqueued << endl;
+      else {
+	cout << "\"";
+      }
+      moves++;
+    }
+    cout << "]}";
+      //cout << "Number of moves = " << moves-1 << endl;
+      //cout << "Number of states enqueued = " << statesEnqueued << endl;
   }
   else {
-    cout << "Impossible to reach goal state at search tree of depth 10" << endl;
+    cout << "\"Impossible to reach goal state at search tree of depth " << depthLimit << "\"]}" << endl;
   }
   return;
 }
 
 void createTree(Node* node, string prev) {
-  if(node->getDepth() < 10 && !node->goalState()) {
+  if(node->getDepth() < depthLimit && !node->goalState()) {
     string upMove = node->getPuzzle().getMove("up");
     if(upMove != "" && prev != "down") {
       node->setUpNode(new Node(upMove, node->getDepth()+1));
@@ -598,26 +633,63 @@ void createTree(Node* node, string prev) {
 }
 
 int main(int argc, char *argv[]) {
-  fstream input;
-  input.open(argv[2], ios::in);
-  if(input.is_open()) {
-    string str;
-    while(getline(input, str)) {
-      Node* root = new Node(str, 0);
-      createTree(root, "");      
-      if(strcmp(argv[1], "dfs") == 0) {
-	dfs(root, str);
+  if(strcmp(argv[1], "nf") == 0) {
+    
+    std::vector<std::string> args(argv + 1,argv + argc);
+
+    string initial;
+    for(int i = 0; i < args[2].length(); i++) {
+      initial += args[2].substr(i, 1) + " ";
+    }
+
+    string goalString;
+    for(int i = 0; i < args[3].length(); i++) {
+      goalString += args[3].substr(i, 1) + " ";
+    }
+    
+    arraySetup(goalString);
+    goalS = goalString;
+    depthLimit = atoi(argv[5]);
+    Node* root = new Node(initial, 0);
+    createTree(root, "");
+    if(strcmp(argv[2], "dfs") == 0) {
+      dfs(root, initial);
+    }
+    else if(strcmp(argv[2], "ids") == 0) {
+      ids(root, initial);
+    }
+    else if(strcmp(argv[2], "astar1") == 0) {
+      astarOne(root, initial);
+    }
+    else if(strcmp(argv[2], "astar2") == 0) {
+      astarTwo(root, initial);
+    }
+  }
+  else {
+    fstream input;
+    input.open(argv[2], ios::in);
+    arraySetup("1 2 3 4 * 5 6 7 8");
+    goalS = "1 2 3 4 * 5 6 7 8";
+    depthLimit = 20;
+    if(input.is_open()) {
+      string str;
+      while(getline(input, str)) {
+	Node* root = new Node(str, 0);
+	createTree(root, "");
+	if(strcmp(argv[1], "dfs") == 0) {
+	  dfs(root, str);
+	}
+	else if(strcmp(argv[1], "ids") == 0) {
+	  ids(root, str);
+	}
+	else if(strcmp(argv[1], "astar1") == 0) {
+	  astarOne(root, str);
+	}
+	else if(strcmp(argv[1], "astar2") == 0) {
+	  astarTwo(root, str);
+	}
+	cout << endl;
       }
-      else if(strcmp(argv[1], "ids") == 0) {
-	ids(root, str);
-      }
-      else if(strcmp(argv[1], "astar1") == 0) {
-	astarOne(root, str);
-      }
-      else if(strcmp(argv[1], "astar2") == 0) {
-	astarTwo(root, str);
-      }
-      cout << endl;
     }
   }
 }
