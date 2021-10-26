@@ -1,1 +1,1 @@
-web: Eight-Puzzle-Solver
+web: go run main.go
