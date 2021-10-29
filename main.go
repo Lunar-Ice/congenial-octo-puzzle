@@ -7,6 +7,8 @@ import (
        "github.com/gin-gonic/contrib/static"
        "github.com/gin-gonic/gin"
        "os/exec"
+       "database/sql"
+       "github.com/lib/pq"
 )
 
 func main() {
@@ -19,6 +21,17 @@ func main() {
      router := gin.Default()
      router.Use(gin.Logger())
      router.Use(static.Serve("/", static.LocalFile("web/puzzle-frontend/build/.", true)))
+
+     dbURL := os.Getenv("DATABASE_URL")
+
+     connection, _ := pq.ParseURL(dbUrl)
+     connection += " sslmode=require"
+
+     db, e := sql.Open("postgres", connection)
+
+     sqlStatement := 'INSERT into eightpuzzledata (inputState, goalState, algorithm, depthLimit, solution)
+     		      VALUES ($1, $2, $3, $4, $5)
+		      RETURNING id'
 
      router.GET("/input/query", func(c *gin.Context) {
      			   c.Header("Content-Type", "application/json")
@@ -35,8 +48,9 @@ func main() {
 			       c.JSON(http.StatusOK, err.Error())
 			       return
 			   }
-
-     			   //c.JSON(http.StatusOK, "inputState: " + inputState + " goalState: " + goalState + " algorithm: " + algorithm + " depth: " + depth);
+			   
+			   id := 0
+			   dberr = db.QueryRow(sqlStatement, inputState, goalState, algorithm, depth, string(stdout)).Scan(&id)	
 			   c.JSON(http.StatusOK, string(stdout))
      })
 
