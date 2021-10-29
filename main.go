@@ -22,17 +22,6 @@ func main() {
      router.Use(gin.Logger())
      router.Use(static.Serve("/", static.LocalFile("web/puzzle-frontend/build/.", true)))
 
-     dbURL := os.Getenv("DATABASE_URL")
-
-     connection, _ := pq.ParseURL(dbUrl)
-     connection += " sslmode=require"
-
-     db, e := sql.Open("postgres", connection)
-
-     sqlStatement := 'INSERT into eightpuzzledata (inputState, goalState, algorithm, depthLimit, solution)
-     		      VALUES ($1, $2, $3, $4, $5)
-		      RETURNING id'
-
      router.GET("/input/query", func(c *gin.Context) {
      			   c.Header("Content-Type", "application/json")
 			   inputState := c.DefaultQuery("inputState", "null")
@@ -48,9 +37,30 @@ func main() {
 			       c.JSON(http.StatusOK, err.Error())
 			       return
 			   }
-			   
+
+			   dbURL := os.Getenv("DATABASE_URL")
+
+     			   connection, _ := pq.ParseURL(dbURL)
+     			   connection += " sslmode=require"
+
+     			   db, e := sql.Open("postgres", connection)
+
+			   if e != nil {
+			      panic(e)
+			   }
+
+			   sqlStatement := `
+			   INSERT INTO eightpuzzledata (inputState, goalState, algorithm, depth, solution)
+			   VALUES ($1, $2, $3, $4, $5)
+			   RETURNING id`
+
 			   id := 0
-			   dberr = db.QueryRow(sqlStatement, inputState, goalState, algorithm, depth, string(stdout)).Scan(&id)	
+			   dberr := db.QueryRow(sqlStatement, inputState, goalState, algorithm, depth, string(stdout)).Scan(&id)
+
+			   if dberr != nil {
+			      panic(dberr)
+			   }
+
 			   c.JSON(http.StatusOK, string(stdout))
      })
 
