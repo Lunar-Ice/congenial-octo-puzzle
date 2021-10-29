@@ -50,7 +50,7 @@ func main() {
 			   }
 
 			   sqlStatement := `
-			   INSERT INTO eightpuzzledata (inputState, goalState, algorithm, depth, solution)
+			   INSERT INTO eightpuzzledata (inputState, goalState, algorithm, depthLimit, solution)
 			   VALUES ($1, $2, $3, $4, $5)
 			   RETURNING id`
 
