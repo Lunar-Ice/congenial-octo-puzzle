@@ -50,7 +50,7 @@ func main() {
 
 			   switch err := solution.Scan(&soln); err {
 			      case sql.ErrNoRows:
-			      	   continue
+			      	   break
 			      case nil:
 			      	   c.JSON(http.StatusOK, soln)
 				   return
