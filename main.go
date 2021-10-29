@@ -30,6 +30,7 @@ func main() {
 			   depth := c.Query("depth")
 			   program := "./eight_puzzle"
 			   flag := "nf"
+
 			   dbURL := os.Getenv("DATABASE_URL")
 
      			   connection, _ := pq.ParseURL(dbURL)
@@ -45,9 +46,16 @@ func main() {
 
 			   solution := db.QueryRow(searchStatement, inputState, goalState, algorithm, depth);
 
-			   if solution != nil {
-			      c.JSON(http.StatusOK, solution)
-			      return
+			   var soln string
+
+			   switch err := solution.Scan(&soln); err {
+			      case sql.ErrNoRows:
+			      	   continue
+			      case nil:
+			      	   c.JSON(http.StatusOK, soln)
+				   return
+			      default:
+				   panic(err)
 			   }
 
 			   eightPuzzle := exec.Command(program, flag, algorithm, inputState, goalState, depth)
