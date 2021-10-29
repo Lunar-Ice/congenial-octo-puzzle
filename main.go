@@ -30,23 +30,32 @@ func main() {
 			   depth := c.Query("depth")
 			   program := "./eight_puzzle"
 			   flag := "nf"
+			   dbURL := os.Getenv("DATABASE_URL")
+
+     			   connection, _ := pq.ParseURL(dbURL)
+     			   connection += " sslmode=require"
+
+			   db, e := sql.Open("postgres", connection)
+
+			   if e != nil {
+			      panic(e)
+			   }
+
+			   searchStatement := `SELECT solution from eightpuzzledata WHERE "inputState"=$1 AND "goalState"=$2 AND algorithm=$3 AND "depthLimit"=$4;` 
+
+			   solution := db.queryRow(searchStatement, inputState, goalState, algorithm, depth);
+
+			   if solution != nil {
+			      c.JSON(http.StatusOK, solution)
+			      return
+			   }
+
 			   eightPuzzle := exec.Command(program, flag, algorithm, inputState, goalState, depth)
 			   stdout, err := eightPuzzle.Output()
 
 			   if err != nil {
 			       c.JSON(http.StatusOK, err.Error())
 			       return
-			   }
-
-			   dbURL := os.Getenv("DATABASE_URL")
-
-     			   connection, _ := pq.ParseURL(dbURL)
-     			   connection += " sslmode=require"
-
-     			   db, e := sql.Open("postgres", connection)
-
-			   if e != nil {
-			      panic(e)
 			   }
 
 			   sqlStatement := `
