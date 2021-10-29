@@ -43,7 +43,7 @@ func main() {
 
 			   searchStatement := `SELECT solution from eightpuzzledata WHERE "inputState"=$1 AND "goalState"=$2 AND algorithm=$3 AND "depthLimit"=$4;` 
 
-			   solution := db.queryRow(searchStatement, inputState, goalState, algorithm, depth);
+			   solution := db.QueryRow(searchStatement, inputState, goalState, algorithm, depth);
 
 			   if solution != nil {
 			      c.JSON(http.StatusOK, solution)
